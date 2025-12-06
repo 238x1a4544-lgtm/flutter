@@ -1,0 +1,118 @@
+Question 17: Show the start and end date in the date picker. But the end date should be 29 days ago from the start date. What will be your approach to getting this problem statement?
+
+
+Hint 1:- Use the date picker library for selecting the start and end date.
+
+Hint 2:- Add the logic which is end data should be 29 days ago from the start date.
+source code :
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // For formatting dates
+
+void main() {
+  runApp(const DatePickerApp());
+}
+
+class DatePickerApp extends StatelessWidget {
+  const DatePickerApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Date Picker Example',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const DatePickerScreen(),
+    );
+  }
+}
+
+class DatePickerScreen extends StatefulWidget {
+  const DatePickerScreen({super.key});
+
+  @override
+  State<DatePickerScreen> createState() => _DatePickerScreenState();
+}
+
+class _DatePickerScreenState extends State<DatePickerScreen> {
+  DateTime? _startDate;
+  DateTime? _endDate;
+
+  // Function to pick start date
+  Future<void> _selectStartDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),      // Default date
+      firstDate: DateTime(2000),        // Earliest selectable date
+      lastDate: DateTime.now(),         // Latest selectable date
+    );
+
+    if (pickedDate != null) {
+      // Calculate end date as 29 days before the selected start date
+      DateTime calculatedEndDate = pickedDate.subtract(const Duration(days: 29));
+
+      setState(() {
+        _startDate = pickedDate;
+        _endDate = calculatedEndDate;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String formatDate(DateTime? date) {
+      if (date == null) return 'Not selected';
+      return DateFormat('yyyy-MM-dd').format(date);
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Start and End Date Picker'),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Start Date section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Start Date:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  formatDate(_startDate),
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // End Date section
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'End Date (29 days ago):',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  formatDate(_endDate),
+                  style: const TextStyle(fontSize: 18, color: Colors.blue),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+
+            // Button to select start date
+            ElevatedButton(
+              onPressed: () => _selectStartDate(context),
+              child: const Text('Select Start Date'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
