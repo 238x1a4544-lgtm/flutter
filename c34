@@ -1,0 +1,98 @@
+Question 10: Create a Provider that provides a counter value and a function to reset the counter to zero. Display the counter value in another widget and use a button to reset the counter.
+
+source code :
+// main.dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+// Step 1: Create Counter Provider
+class CounterProvider with ChangeNotifier {
+  int _counter = 0;
+
+  int get counter => _counter;
+
+  void increment() {
+    _counter++;
+    notifyListeners();
+  }
+
+  void reset() {
+    _counter = 0;
+    notifyListeners();
+  }
+}
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => CounterProvider(),
+      child: MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Provider Reset Counter',
+      home: CounterScreen(),
+    );
+  }
+}
+
+// Step 2: Counter Screen with Increment & Reset
+class CounterScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final counterProvider = Provider.of<CounterProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Provider Counter Reset')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Counter Value:',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(height: 10),
+            // Display counter in another widget
+            CounterDisplay(),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                counterProvider.increment();
+              },
+              child: Text('Increment Counter'),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                counterProvider.reset();
+              },
+              child: Text('Reset Counter'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Step 3: Widget to display counter value
+class CounterDisplay extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CounterProvider>(
+      builder: (context, counterProvider, child) {
+        return Text(
+          '${counterProvider.counter}',
+          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+        );
+      },
+    );
+  }
+}
