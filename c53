@@ -1,0 +1,225 @@
+Question 20: Implement a Flutter application that resembles the functionality of the "GET IT DONE" app, with the added feature of storing data on Firebase and incorporating email and password authentication. 
+source code : 
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(GetItDoneApp());
+}
+
+class GetItDoneApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'GET IT DONE',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: AuthGate(),
+    );
+  }
+}
+
+// Widget that shows login/signup or todo screen depending on auth state
+class AuthGate extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (!snapshot.hasData) {
+          return LoginScreen();
+        }
+        return TodoScreen();
+      },
+    );
+  }
+}
+
+// Login & Signup Screen
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool isLogin = true;
+  String errorMessage = '';
+
+  Future<void> signIn() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim());
+    } on FirebaseAuthException catch (e) {
+      setState(() => errorMessage = e.message ?? 'An error occurred');
+    }
+  }
+
+  Future<void> signUp() async {
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim());
+    } on FirebaseAuthException catch (e) {
+      setState(() => errorMessage = e.message ?? 'An error occurred');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(isLogin ? 'Login' : 'Sign Up')),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration:
+                  InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 12),
+            TextField(
+              controller: _passwordController,
+              decoration:
+                  InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+              obscureText: true,
+            ),
+            SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: isLogin ? signIn : signUp,
+              child: Text(isLogin ? 'Login' : 'Sign Up'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  isLogin = !isLogin;
+                  errorMessage = '';
+                });
+              },
+              child: Text(isLogin
+                  ? "Don't have an account? Sign Up"
+                  : "Already have an account? Login"),
+            ),
+            if (errorMessage.isNotEmpty)
+              Text(errorMessage, style: TextStyle(color: Colors.red)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Todo Screen: Add/view/delete tasks
+class TodoScreen extends StatefulWidget {
+  @override
+  _TodoScreenState createState() => _TodoScreenState();
+}
+
+class _TodoScreenState extends State<TodoScreen> {
+  final _taskController = TextEditingController();
+  final user = FirebaseAuth.instance.currentUser!;
+  late CollectionReference tasksCollection;
+
+  @override
+  void initState() {
+    super.initState();
+    // Tasks are stored per user in Firestore under 'users/{uid}/tasks'
+    tasksCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('tasks');
+  }
+
+  Future<void> addTask() async {
+    final taskText = _taskController.text.trim();
+    if (taskText.isNotEmpty) {
+      await tasksCollection.add({'task': taskText, 'timestamp': FieldValue.serverTimestamp()});
+      _taskController.clear();
+    }
+  }
+
+  Future<void> deleteTask(String id) async {
+    await tasksCollection.doc(id).delete();
+  }
+
+  Future<void> signOut() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('GET IT DONE - Tasks'),
+        actions: [
+          IconButton(onPressed: signOut, icon: Icon(Icons.logout)),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _taskController,
+                    decoration: InputDecoration(
+                        labelText: 'Add a new task',
+                        border: OutlineInputBorder()),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: addTask,
+                  child: Text('Add'),
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: tasksCollection.orderBy('timestamp', descending: true).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error loading tasks'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                final tasks = snapshot.data!.docs;
+                if (tasks.isEmpty) {
+                  return Center(child: Text('No tasks yet. Add one!'));
+                }
+                return ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final doc = tasks[index];
+                    final taskText = doc['task'] ?? '';
+                    return ListTile(
+                      title: Text(taskText),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => deleteTask(doc.id),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
