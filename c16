@@ -1,0 +1,98 @@
+Question 21: Create a sample drawing app whose background should be white and where the user just draws something.
+
+Hint 1:- Use the inbuilt paint library of Dart.
+source code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const DrawingApp());
+}
+
+class DrawingApp extends StatelessWidget {
+  const DrawingApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: DrawingScreen(),
+    );
+  }
+}
+
+class DrawingScreen extends StatefulWidget {
+  const DrawingScreen({super.key});
+
+  @override
+  State<DrawingScreen> createState() => _DrawingScreenState();
+}
+
+class _DrawingScreenState extends State<DrawingScreen> {
+  List<Offset?> _points = []; // List to store drawn points
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Simple Drawing App"),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+      ),
+      backgroundColor: Colors.white, // White background
+      body: GestureDetector(
+        onPanStart: (details) {
+          setState(() {
+            _points.add(details.localPosition);
+          });
+        },
+        onPanUpdate: (details) {
+          setState(() {
+            _points.add(details.localPosition);
+          });
+        },
+        onPanEnd: (details) {
+          setState(() {
+            _points.add(null); // Separate strokes
+          });
+        },
+        child: CustomPaint(
+          painter: DrawingPainter(_points),
+          size: Size.infinite,
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.redAccent,
+        onPressed: () {
+          setState(() {
+            _points.clear(); // Clear drawing
+          });
+        },
+        child: const Icon(Icons.clear),
+      ),
+    );
+  }
+}
+
+class DrawingPainter extends CustomPainter {
+  final List<Offset?> points;
+
+  DrawingPainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true;
+
+    for (int i = 0; i < points.length - 1; i++) {
+      if (points[i] != null && points[i + 1] != null) {
+        canvas.drawLine(points[i]!, points[i + 1]!, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(DrawingPainter oldDelegate) => true;
+}
