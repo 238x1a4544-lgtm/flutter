@@ -1,0 +1,65 @@
+Question 35: We have reordered a given list of data by drag and drop. How will you achieve this problem statement?
+
+var List=[item1,item2,item3,item4,item5]
+
+Hint 1:- Use ListTitle and ReorderedListByDragDrop widget.
+
+Hint 2:- Add logic for the reordered list by drag and drop. 
+
+source code : 
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Reorderable List Demo',
+      home: ReorderableListExample(),
+    );
+  }
+}
+
+class ReorderableListExample extends StatefulWidget {
+  @override
+  _ReorderableListExampleState createState() => _ReorderableListExampleState();
+}
+
+class _ReorderableListExampleState extends State<ReorderableListExample> {
+  // Initial list of items
+  List<String> items = ['item1', 'item2', 'item3', 'item4', 'item5'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Reorderable List Demo'),
+      ),
+      body: ReorderableListView(
+        children: [
+          for (final item in items)
+            ListTile(
+              key: ValueKey(item),
+              title: Text(item),
+              leading: Icon(Icons.drag_handle),
+            )
+        ],
+        onReorder: (int oldIndex, int newIndex) {
+          setState(() {
+            // Adjust newIndex if moving down the list
+            if (newIndex > oldIndex) {
+              newIndex -= 1;
+            }
+            // Remove the item from old position
+            final String movedItem = items.removeAt(oldIndex);
+            // Insert the item at new position
+            items.insert(newIndex, movedItem);
+          });
+        },
+      ),
+    );
+  }
+}
