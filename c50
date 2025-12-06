@@ -1,0 +1,135 @@
+Question 17: Implement email and password authentication in a Flutter app.
+source code : 
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Initialize Firebase
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Email/Password Auth',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: AuthPage(),
+    );
+  }
+}
+
+class AuthPage extends StatefulWidget {
+  @override
+  _AuthPageState createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  bool isLoading = false;
+  String message = '';
+
+  Future<void> _signUp() async {
+    setState(() {
+      isLoading = true;
+      message = '';
+    });
+
+    try {
+      await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text);
+      setState(() {
+        message = 'Sign Up Successful!';
+      });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        message = 'Sign Up Failed: ${e.message}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _signIn() async {
+    setState(() {
+      isLoading = true;
+      message = '';
+    });
+
+    try {
+      await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text);
+      setState(() {
+        message = 'Sign In Successful!';
+      });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        message = 'Sign In Failed: ${e.message}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: Text('Email/Password Authentication')),
+        body: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _emailController,
+                decoration:
+                    InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                decoration:
+                    InputDecoration(labelText: 'Password', border: OutlineInputBorder()),
+                obscureText: true,
+              ),
+              SizedBox(height: 16),
+              if (isLoading)
+                CircularProgressIndicator()
+              else
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    ElevatedButton(onPressed: _signUp, child: Text('Sign Up')),
+                    ElevatedButton(onPressed: _signIn, child: Text('Sign In')),
+                  ],
+                ),
+              SizedBox(height: 20),
+              Text(
+                message,
+                style: TextStyle(color: message.contains('Failed') ? Colors.red : Colors.green),
+                textAlign: TextAlign.center,
+              )
+            ],
+          ),
+        ));
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+}
