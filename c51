@@ -1,0 +1,96 @@
+Question 18: Create a Flutter application that retrieves and displays user comments from the server using the API "https://jsonplaceholder.typicode.com/comments". The comments should include the name and email of each user. 
+
+source code : 
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(CommentsApp());
+}
+
+class CommentsApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'User Comments',
+      home: CommentsScreen(),
+    );
+  }
+}
+
+class CommentsScreen extends StatefulWidget {
+  @override
+  _CommentsScreenState createState() => _CommentsScreenState();
+}
+
+class _CommentsScreenState extends State<CommentsScreen> {
+  late Future<List<Comment>> _commentsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _commentsFuture = fetchComments();
+  }
+
+  Future<List<Comment>> fetchComments() async {
+    final response =
+        await http.get(Uri.parse('https://jsonplaceholder.typicode.com/comments'));
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonList = jsonDecode(response.body);
+      return jsonList.map((json) => Comment.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load comments');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(title: Text('User Comments')),
+        body: FutureBuilder<List<Comment>>(
+          future: _commentsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // While fetching data, show a loading spinner
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              // Show error message if something went wrong
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No comments found'));
+            }
+
+            final comments = snapshot.data!;
+
+            return ListView.builder(
+              itemCount: comments.length,
+              itemBuilder: (context, index) {
+                final comment = comments[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    child: Text(comment.name[0].toUpperCase()),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                  title: Text(comment.name),
+                  subtitle: Text(comment.email),
+                );
+              },
+            );
+          },
+        ));
+  }
+}
+
+class Comment {
+  final String name;
+  final String email;
+
+  Comment({required this.name, required this.email});
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(name: json['name'], email: json['email']);
+  }
+}
