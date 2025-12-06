@@ -1,0 +1,151 @@
+Question 16: How to Show this result based on the given details:
+True-answers=6
+Wrong -answers=0
+Total-questions=6
+ 
+ 
+ 
+Hint 1:- Use imageview and textview, containers for showing the image and text.
+Hint 2:- Add the logic for showing the result based on true, and false values out of total questions.
+Source code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(ResultApp());
+}
+
+class ResultApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Quiz Result',
+      debugShowCheckedModeBanner: false,
+      home: ResultScreen(
+        totalQuestions: 6,
+        trueAnswers: 6,
+        wrongAnswers: 0,
+      ),
+    );
+  }
+}
+
+class ResultScreen extends StatelessWidget {
+  final int totalQuestions;
+  final int trueAnswers;
+  final int wrongAnswers;
+
+  const ResultScreen({
+    Key? key,
+    required this.totalQuestions,
+    required this.trueAnswers,
+    required this.wrongAnswers,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    double percentage = (trueAnswers / totalQuestions) * 100;
+    bool isPassed = percentage >= 50;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Legend
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildLegend(Colors.blue, "Total Question", totalQuestions),
+                  const SizedBox(width: 20),
+                  _buildLegend(Colors.green, "True Question", trueAnswers),
+                  const SizedBox(width: 20),
+                  _buildLegend(Colors.red, "Wrong answer", wrongAnswers),
+                ],
+              ),
+              const SizedBox(height: 40),
+
+              // Circle Percentage
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 150,
+                    height: 150,
+                    child: CircularProgressIndicator(
+                      value: percentage / 100,
+                      strokeWidth: 10,
+                      backgroundColor: Colors.grey.shade200,
+                      color: isPassed ? Colors.green : Colors.red,
+                    ),
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "${percentage.toStringAsFixed(2)}%",
+                        style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        isPassed ? "Passed" : "Failed",
+                        style: TextStyle(
+                            fontSize: 18,
+                            color:
+                                isPassed ? Colors.green : Colors.redAccent),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 40),
+
+              // Congratulations message
+              Text(
+                isPassed
+                    ? "Congratulations! You are passed."
+                    : "Sorry! You did not pass.",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 30),
+
+              // Trophy image
+              if (isPassed)
+                Image.asset(
+                  'assets/trophy.png',
+                  height: 150,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegend(Color color, String text, int value) {
+    return Row(
+      children: [
+        Container(width: 15, height: 15, color: color),
+        const SizedBox(width: 5),
+        Text(
+          "$text $value",
+          style: const TextStyle(fontSize: 14),
+        ),
+      ],
+    );
+  }
+}
+🖼️ Add a Trophy Image
+1.	Add an image named trophy.png to your Flutter project under:
+2.	assets/trophy.png
+3.	In your pubspec.yaml, include:
+4.	flutter:
+5.	  assets:
+    - assets/trophy.png
