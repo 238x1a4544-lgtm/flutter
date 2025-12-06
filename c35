@@ -1,0 +1,52 @@
+Question 1: Write a Flutter program to construct a container similar to the one shown below:
+
+
+source code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Neon Bubble',
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: NeonBubble(),
+        ),
+      ),
+    );
+  }
+}
+
+class NeonBubble extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.cyanAccent, // Light cyan-like color
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purpleAccent.withOpacity(0.8),
+            blurRadius: 15,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: const Text(
+        "Hello I'm",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+}
