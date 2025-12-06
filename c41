@@ -1,0 +1,84 @@
+Question 36: Add the functionality of the given list. If the user clicks on the delete button then the item needs to be deleted. If the user clicks a particular item and clicks on add button then the item needs to be added and it needs to be rendered into UI. What will be your approach to this problem statement?
+
+final List<String> _data = [
+'Item 1',
+'Item 2',
+'Item 3',
+'Item 4',
+];
+
+ 
+
+Hint 1:- Use ListTile with text and index value.
+
+Hint 2:- Add a button to increment the value of the list.
+
+souce code : 
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Add/Delete List Items',
+      home: ListAddDeleteScreen(),
+    );
+  }
+}
+
+class ListAddDeleteScreen extends StatefulWidget {
+  @override
+  _ListAddDeleteScreenState createState() => _ListAddDeleteScreenState();
+}
+
+class _ListAddDeleteScreenState extends State<ListAddDeleteScreen> {
+  final List<String> _data = [
+    'Item 1',
+    'Item 2',
+    'Item 3',
+    'Item 4',
+  ];
+
+  // Keeps track of the last index to generate new items
+  int _nextItemIndex = 5;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add/Delete List Items'),
+      ),
+      body: ListView.builder(
+        itemCount: _data.length,
+        itemBuilder: (context, index) {
+          final item = _data[index];
+          return ListTile(
+            title: Text('$item (Index: $index)'),
+            trailing: IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                setState(() {
+                  _data.removeAt(index);
+                });
+              },
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          setState(() {
+            // Add new item to list
+            _data.add('Item $_nextItemIndex');
+            _nextItemIndex++;
+          });
+        },
+      ),
+    );
+  }
+}
