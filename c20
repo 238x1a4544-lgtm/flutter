@@ -1,0 +1,114 @@
+Question 24: You have two buttons A & B . When you click on the A button the image will be shown and you click on the B button then your name, phone number, and email will be shown. How will you achieve this problem statement?
+
+Hint 1:- Add the flag to show the different-2 data on click of buttons.
+
+Hint 2:- Add text in the column for showing the name, phone number, and email.
+
+Hint 3:- Add imageView to show the image.
+
+Hint 4:- Add the image to the assets folder.
+
+spource code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const InfoToggleApp());
+}
+
+class InfoToggleApp extends StatelessWidget {
+  const InfoToggleApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: InfoToggleScreen(),
+    );
+  }
+}
+
+class InfoToggleScreen extends StatefulWidget {
+  const InfoToggleScreen({super.key});
+
+  @override
+  State<InfoToggleScreen> createState() => _InfoToggleScreenState();
+}
+
+class _InfoToggleScreenState extends State<InfoToggleScreen> {
+  bool _showImage = false; // flag variable
+
+  void _showImageView() {
+    setState(() {
+      _showImage = true;
+    });
+  }
+
+  void _showTextView() {
+    setState(() {
+      _showImage = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Toggle Data View"),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: _showImageView,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent),
+                child: const Text("A - Show Image"),
+              ),
+              ElevatedButton(
+                onPressed: _showTextView,
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.greenAccent),
+                child: const Text("B - Show Info"),
+              ),
+            ],
+          ),
+          const SizedBox(height: 40),
+
+          // Conditional rendering
+          _showImage
+              ? Image.asset(
+                  'assets/images/profile.png',
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.cover,
+                )
+              : Column(
+                  children: const [
+                    Text(
+                      "Name: John Doe",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Phone: +91 9876543210",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Email: johndoe@example.com",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+        ],
+      ),
+    );
+  }
+}
