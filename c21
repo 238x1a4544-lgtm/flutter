@@ -1,0 +1,89 @@
+Question 07: Build a Flutter application where pressing a button will change the color of all text widgets within the application.  
+
+source code :
+import 'package:flutter/material.dart';
+import 'dart:math';
+
+void main() {
+  runApp(const TextColorApp());
+}
+
+class TextColorApp extends StatelessWidget {
+  const TextColorApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: TextColorScreen(),
+    );
+  }
+}
+
+class TextColorScreen extends StatefulWidget {
+  const TextColorScreen({super.key});
+
+  @override
+  State<TextColorScreen> createState() => _TextColorScreenState();
+}
+
+class _TextColorScreenState extends State<TextColorScreen> {
+  Color _textColor = Colors.black; // Initial text color
+  final Random _random = Random();
+
+  void _changeTextColor() {
+    setState(() {
+      // Generate random color
+      _textColor = Color.fromARGB(
+        255,
+        _random.nextInt(256),
+        _random.nextInt(256),
+        _random.nextInt(256),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Dynamic Text Color App"),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Hello, Flutter!",
+              style: TextStyle(fontSize: 24, color: _textColor),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "Press the button below",
+              style: TextStyle(fontSize: 22, color: _textColor),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "to change text colors",
+              style: TextStyle(fontSize: 22, color: _textColor),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: _changeTextColor,
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 25, vertical: 15)),
+              child: const Text(
+                "Change Text Color",
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
