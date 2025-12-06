@@ -1,0 +1,111 @@
+Question 39: Create an app that allows users to add items to Firestore using Form.
+
+source code : 
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  // Initialize Firebase in your main method if not done already (e.g., Firebase.initializeApp())
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Add Item to Firestore',
+      home: AddItemScreen(),
+    );
+  }
+}
+
+class AddItemScreen extends StatefulWidget {
+  @override
+  _AddItemScreenState createState() => _AddItemScreenState();
+}
+
+class _AddItemScreenState extends State<AddItemScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _itemNameController = TextEditingController();
+  final TextEditingController _itemDescriptionController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _addItem() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        await FirebaseFirestore.instance.collection('items').add({
+          'name': _itemNameController.text.trim(),
+          'description': _itemDescriptionController.text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Item added successfully!')),
+        );
+
+        _itemNameController.clear();
+        _itemDescriptionController.clear();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add item: $e')),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    _itemDescriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add Item to Firestore'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _itemNameController,
+                decoration: InputDecoration(labelText: 'Item Name'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter item name' : null,
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _itemDescriptionController,
+                decoration: InputDecoration(labelText: 'Item Description'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Please enter description' : null,
+              ),
+              SizedBox(height: 24),
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _addItem,
+                      child: Text('Add Item'),
+                    ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
