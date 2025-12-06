@@ -1,0 +1,115 @@
+Question 41: Create a Flutter app that allows users to add and display items using Firebase Firestore. The app should have a text input field for users to enter the name of an item and a button to submit the item. The app should also display a list of all the items in the database.
+
+
+source code : 
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // Make sure to configure Firebase correctly
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Firestore Add & Display Items',
+      home: ItemListScreen(),
+    );
+  }
+}
+
+class ItemListScreen extends StatefulWidget {
+  @override
+  _ItemListScreenState createState() => _ItemListScreenState();
+}
+
+class _ItemListScreenState extends State<ItemListScreen> {
+  final TextEditingController _itemController = TextEditingController();
+  final CollectionReference _itemsCollection =
+      FirebaseFirestore.instance.collection('items');
+
+  void _addItem() async {
+    final String itemName = _itemController.text.trim();
+    if (itemName.isEmpty) return;
+
+    try {
+      await _itemsCollection.add({'name': itemName, 'createdAt': FieldValue.serverTimestamp()});
+      _itemController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add item: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _itemController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Add & Display Items'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _itemController,
+                    decoration: InputDecoration(
+                      labelText: 'Enter item name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: _addItem,
+                  child: Text('Add'),
+                )
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _itemsCollection.orderBy('createdAt', descending: true).snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                final data = snapshot.data;
+                if (data == null || data.docs.isEmpty) {
+                  return Center(child: Text('No items found'));
+                }
+
+                return ListView.builder(
+                  itemCount: data.docs.length,
+                  itemBuilder: (context, index) {
+                    var item = data.docs[index];
+                    return ListTile(
+                      title: Text(item['name'] ?? ''),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
