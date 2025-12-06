@@ -1,0 +1,108 @@
+Question 37: Merge the given two lists of objects into one list of objects and data should not be duplicated. Print the final list of data into UI. How will you solve this problem statement? 
+
+List list1 = [
+{
+"name": "Annu Rathour",
+"age": "25",
+"occupation": "mobile application developer"
+},
+{"name": "Menu Gupta", "age": "26", "occupation": "rectjs developer"},
+{"name": "Shubham Sharma", "age": "26", "occupation": "java developer"}
+];
+List list2 = [
+{
+"name": "Annu Rathour",
+"age": "25",
+"occupation": "mobile application developer",
+},
+{
+"name": "Menu Gupta",
+"age": "26",
+"occupation": "rectjs developer",
+},
+{"name": "Shubham1 Sharma", "age": "26", "occupation": "java developer"}
+];
+
+ 
+
+Hint 1:- Use the inbuilt method of dart for removing the duplicate data.
+
+source code :
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Merge Lists Demo',
+      home: MergeListsScreen(),
+    );
+  }
+}
+
+class MergeListsScreen extends StatelessWidget {
+  final List<Map<String, String>> list1 = [
+    {
+      "name": "Annu Rathour",
+      "age": "25",
+      "occupation": "mobile application developer"
+    },
+    {"name": "Menu Gupta", "age": "26", "occupation": "rectjs developer"},
+    {"name": "Shubham Sharma", "age": "26", "occupation": "java developer"}
+  ];
+
+  final List<Map<String, String>> list2 = [
+    {
+      "name": "Annu Rathour",
+      "age": "25",
+      "occupation": "mobile application developer",
+    },
+    {
+      "name": "Menu Gupta",
+      "age": "26",
+      "occupation": "rectjs developer",
+    },
+    {"name": "Shubham1 Sharma", "age": "26", "occupation": "java developer"}
+  ];
+
+  // Function to merge lists and remove duplicates by 'name'
+  List<Map<String, String>> mergeLists(
+      List<Map<String, String>> list1, List<Map<String, String>> list2) {
+    Map<String, Map<String, String>> uniqueMap = {};
+
+    for (var item in list1) {
+      uniqueMap[item['name'] ?? ''] = item;
+    }
+    for (var item in list2) {
+      uniqueMap[item['name'] ?? ''] = item;
+    }
+
+    return uniqueMap.values.toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mergedList = mergeLists(list1, list2);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Merged Unique List'),
+      ),
+      body: ListView.builder(
+        itemCount: mergedList.length,
+        itemBuilder: (context, index) {
+          final person = mergedList[index];
+          return ListTile(
+            title: Text(person['name'] ?? ''),
+            subtitle: Text(
+                'Age: ${person['age'] ?? ''} | Occupation: ${person['occupation'] ?? ''}'),
+          );
+        },
+      ),
+    );
+  }
+}
