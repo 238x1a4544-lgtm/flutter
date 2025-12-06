@@ -1,0 +1,61 @@
+Question 4: Show a gif in UI that is based on a timer. If the timer is equal and less than 15 seconds then show the gif else display a message like running time has been over. How will you solve this problem statement? 
+
+personing running.gif
+
+ 
+
+Hint 1:- Use futur.delayed for the duration
+
+Hint 2:- Use a flag based on time and add logic to rendering the gif and text.
+
+source code :
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool showGif = true;
+  final String gifUrl =
+      'https://tataneuskills.instructure.com/courses/784/files/51894/preview';
+
+  @override
+  void initState() {
+    super.initState();
+    // Set a timer for 15 seconds
+    Future.delayed(Duration(seconds: 15), () {
+      setState(() {
+        showGif = false;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Timer Based GIF')),
+        body: Center(
+          child: showGif
+              ? Image.network(
+                  gifUrl,
+                  width: 300,
+                  height: 300,
+                  fit: BoxFit.cover,
+                )
+              : Text(
+                  'Running time has been over',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+        ),
+      ),
+    );
+  }
+}
