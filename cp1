@@ -1,0 +1,228 @@
+Question 01: You have to develop a cake-ordering application that allows users to place orders for cakes and view them on the admin panel. The application will have the following features:
+
+User-friendly interface for placing cake orders, including options for customizing the cake such as size.
+Securing authentication for the users to place orders and for the admin to view them.
+Creating the Admin panel to view all orders placed by users and update the status of orders.
+Making use of Firebase to store order data.
+Note: This final project will provide you with the opportunity to apply the concepts and techniques covered throughout the course to create a functional, production-ready application. This project will include the use of advanced features like Firebase integration, push notifications, and user authentication.
+
+The potential UI design of the admin app and the User app is given as follows:
+source code :
+1. Project Structure & Dependencies
+This project will require two main applications (User App and Admin App) that share a database.
+
+🛠️ Key Dependencies (in pubspec.yaml for Flutter)
+YAML
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Firebase Core and Authentication
+  firebase_core: ^2.17.0
+  firebase_auth: ^4.10.1
+  # Firestore Database
+  cloud_firestore: ^4.9.3
+  # For Push Notifications (FCM)
+  firebase_messaging: ^14.6.9
+📁 High-Level File Structure
+lib/
+├── main.dart             # App initialization and routing
+├── models/
+│   └── order_model.dart  # Data structure for orders
+├── services/
+│   └── firebase_service.dart # Handles all Firebase interactions (CRUD)
+├── screens/
+│   ├── auth/
+│   │   ├── login_screen.dart
+│   │   └── register_screen.dart
+│   ├── user_app/         # User App Screens
+│   │   ├── home_screen.dart
+│   │   ├── orders_screen.dart
+│   │   └── status_screen.dart
+│   └── admin_app/        # Admin Panel Screens
+│       ├── admin_home_screen.dart
+│       └── order_detail_screen.dart
+2. Core Code Implementation Snippets
+A. Data Model (lib/models/order_model.dart)
+This class defines the structure of data stored in Firestore.
+
+Dart
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class OrderModel {
+  final String id;
+  final String userId;
+  final String customerAddress;
+  final String customerNumber;
+  final String itemsOrdered; // Simplification: e.g., "Chocolate Brownie Cake"
+  final String status;
+  final Timestamp timestamp;
+
+  OrderModel({
+    required this.id,
+    required this.userId,
+    required this.customerAddress,
+    required this.customerNumber,
+    required this.itemsOrdered,
+    required this.status,
+    required this.timestamp,
+  });
+
+  // Factory method to create an OrderModel from a Firestore document
+  factory OrderModel.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map<String, dynamic>;
+    return OrderModel(
+      id: doc.id,
+      userId: data['userId'] ?? '',
+      customerAddress: data['customerAddress'] ?? '',
+      customerNumber: data['customerNumber'] ?? '',
+      itemsOrdered: data['itemsOrdered'] ?? '',
+      status: data['status'] ?? 'Order Received',
+      timestamp: data['timestamp'] ?? Timestamp.now(),
+    );
+  }
+
+  // Method to convert the model to a map for Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'customerAddress': customerAddress,
+      'customerNumber': customerNumber,
+      'itemsOrdered': itemsOrdered,
+      'status': status,
+      'timestamp': timestamp,
+    };
+  }
+}
+B. Firebase Service Layer (lib/services/firebase_service.dart)
+This handles all database operations (CRUD).
+
+Dart
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/order_model.dart';
+
+class FirebaseService {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // 1. PLACE ORDER (User App)
+  Future<void> placeNewOrder({
+    required String userId,
+    required String address,
+    required String number,
+    required String items,
+  }) async {
+    await _db.collection('orders').add(OrderModel(
+      id: '', // ID will be set by Firestore
+      userId: userId,
+      customerAddress: address,
+      customerNumber: number,
+      itemsOrdered: items,
+      status: 'Order Received', // Initial status
+      timestamp: Timestamp.now(),
+    ).toMap());
+  }
+
+  // 2. GET USER ORDERS (User App)
+  Stream<List<OrderModel>> getOrdersForUser(String userId) {
+    return _db
+        .collection('orders')
+        .where('userId', isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => OrderModel.fromFirestore(doc))
+            .toList());
+  }
+
+  // 3. GET ALL ORDERS (Admin Panel)
+  Stream<List<OrderModel>> getAllOrders() {
+    return _db
+        .collection('orders')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => OrderModel.fromFirestore(doc))
+            .toList());
+  }
+
+  // 4. UPDATE ORDER STATUS (Admin Panel)
+  Future<void> updateOrderStatus(String orderId, String newStatus) async {
+    await _db.collection('orders').doc(orderId).update({
+      'status': newStatus,
+    });
+    // NOTE: This is where you would trigger an FCM push notification
+    // to the user associated with this orderId.
+  }
+}
+C. Admin Status Update Logic (Snippet for order_detail_screen.dart)
+This demonstrates how the admin UI interacts with the service layer to update the status.
+
+Dart
+
+// Inside OrderDetailScreen widget...
+class OrderDetailScreen extends StatefulWidget {
+  final OrderModel order;
+  // ...
+}
+
+class _OrderDetailScreenState extends State<OrderDetailScreen> {
+  String currentStatus = 'Order Received'; // Will be initialized from widget.order.status
+
+  // Map to manage checkbox state
+  Map<String, bool> statusMap = {
+    'Order Received': false,
+    'Preparing': false,
+    'Out for Delivery': false,
+    'Order Delivered': false,
+  };
+
+  // Helper to determine the highest checked status
+  String _getNewStatus() {
+    if (statusMap['Order Delivered']!) return 'Order Delivered';
+    if (statusMap['Out for Delivery']!) return 'Out for Delivery';
+    if (statusMap['Preparing']!) return 'Preparing';
+    return 'Order Received';
+  }
+
+  void _saveStatus() async {
+    String newStatus = _getNewStatus();
+    if (newStatus != currentStatus) {
+      await FirebaseService().updateOrderStatus(widget.order.id, newStatus);
+      // Show confirmation/toast
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Status updated to $newStatus')),
+      );
+    }
+  }
+
+  // ... Build method with UI components ...
+
+  // Widget for a single status checkbox
+  Widget _buildStatusCheckbox(String statusKey) {
+    return CheckboxListTile(
+      title: Text(statusKey),
+      value: statusMap[statusKey],
+      onChanged: (bool? newValue) {
+        setState(() {
+          // Logic to ensure statuses are checked sequentially
+          // (e.g., can't check 'Delivered' if 'Preparing' isn't checked)
+          statusMap[statusKey] = newValue!;
+        });
+      },
+      // You would implement the sequential check logic here
+    );
+  }
+
+  // In the build method's body:
+  // Text('Order Number: ${widget.order.id}'),
+  // _buildStatusCheckbox('Order Received'),
+  // _buildStatusCheckbox('Preparing'),
+  // // ... other checkboxes
+
+  // ElevatedButton(
+  //   onPressed: _saveStatus,
+  //   child: Text('Save'), // Matches the UI image
+  // )
+}
