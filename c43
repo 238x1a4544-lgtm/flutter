@@ -1,0 +1,141 @@
+Question 38: Fetch the data from the given JSON and show it in UI and also add circleAvatar with a background color yellow. What will be your approach to solving this problem statement?
+
+{
+"Data": [
+{
+"name": "Rohit",
+"email": "rohit@gmail.com",
+"phoneNumber": "9878564523",
+"rollNumber": "512",
+"color": "#313333"
+},
+{
+"name": "Mohit",
+"email": "mohit@gmail.com",
+"phoneNumber": "9878564528",
+"rollNumber": "513",
+"color": "#313333"
+},
+{
+"name": "Sunit",
+"email": "Sunit@gmail.com",
+"phoneNumber": "9878566528",
+"rollNumber": "514",
+"color": "#313333"
+},
+{
+"name": "Raman",
+"email": "raman@gmail.com",
+"phoneNumber": "9878562528",
+"rollNumber": "515",
+"color": "#313333"
+}
+]
+}
+
+Hint 1: Add file.json file inside the assets folder.
+
+Hint 2: Use listview.builder for showing the data.
+
+Hint 3: Create a method to fetch the JSON data and call it in initState method.
+source code : 
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'JSON Data List',
+      home: JsonListScreen(),
+    );
+  }
+}
+
+// Model class for User
+class User {
+  final String name;
+  final String email;
+  final String phoneNumber;
+  final String rollNumber;
+  final String color;
+
+  User({
+    required this.name,
+    required this.email,
+    required this.phoneNumber,
+    required this.rollNumber,
+    required this.color,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      name: json['name'],
+      email: json['email'],
+      phoneNumber: json['phoneNumber'],
+      rollNumber: json['rollNumber'],
+      color: json['color'],
+    );
+  }
+}
+
+class JsonListScreen extends StatefulWidget {
+  @override
+  _JsonListScreenState createState() => _JsonListScreenState();
+}
+
+class _JsonListScreenState extends State<JsonListScreen> {
+  List<User> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchJsonData();
+  }
+
+  Future<void> fetchJsonData() async {
+    final String response = await rootBundle.loadString('assets/data.json');
+    final data = json.decode(response);
+    final List<dynamic> userData = data['Data'];
+
+    setState(() {
+      users = userData.map((json) => User.fromJson(json)).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('User Data List'),
+      ),
+      body: users.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final user = users[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.yellow,
+                    child: Text(
+                      user.name.isNotEmpty ? user.name[0] : '',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                  title: Text(user.name),
+                  subtitle: Text('${user.email}\nPhone: ${user.phoneNumber}\nRoll No: ${user.rollNumber}'),
+                  isThreeLine: true,
+                );
+              },
+            ),
+    );
+  }
+}
+
+43
