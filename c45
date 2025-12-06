@@ -1,0 +1,21 @@
+Question 40: Write a Flutter function that updates a document in a Firebase Firestore collection. The collection name, document ID, and data should be passed as parameters to the function.
+
+source code : 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<void> updateFirestoreDocument({
+  required String collectionName,
+  required String documentId,
+  required Map<String, dynamic> data,
+}) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection(collectionName)
+        .doc(documentId)
+        .update(data);
+    print('Document updated successfully');
+  } catch (e) {
+    print('Error updating document: $e');
+    // You can also throw the error or handle it accordingly
+  }
+}
