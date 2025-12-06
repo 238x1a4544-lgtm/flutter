@@ -1,0 +1,64 @@
+Question 10: Create a Flutter application using Riverpod state management where pressing a button changes the background color of the appBar and Scaffold, as well as plays one of 10 music notes. 
+
+ source code :
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:math';
+
+// Provider for background color
+final colorProvider = StateProvider<Color>((ref) => Colors.white);
+
+// Provider for AudioPlayer
+final audioProvider = Provider<AudioPlayer>((ref) => AudioPlayer());
+
+void main() {
+  runApp(ProviderScope(child: MyApp()));
+}
+
+class MyApp extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bgColor = ref.watch(colorProvider);
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Music & Color App'),
+          backgroundColor: bgColor,
+        ),
+        body: HomeScreen(),
+      ),
+    );
+  }
+}
+
+class HomeScreen extends ConsumerWidget {
+  final Random random = Random();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bgColor = ref.watch(colorProvider);
+
+    return Container(
+      color: bgColor,
+      child: Center(
+        child: ElevatedButton(
+          onPressed: () async {
+            // Change to a random color
+            ref.read(colorProvider.notifier).state =
+                Color((random.nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
+
+            // Play a random music note (assuming you have 10 audio files in assets)
+            int noteNumber = random.nextInt(10) + 1;
+            final player = ref.read(audioProvider);
+            await player.play(AssetSource('notes/note$noteNumber.mp3'));
+          },
+          child: Text('Play Note & Change Color'),
+        ),
+      ),
+    );
+  }
+}
+
+
+ 
